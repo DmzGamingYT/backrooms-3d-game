@@ -1,0 +1,389 @@
+@import "tailwindcss";
+
+/* ── Menu entrance animations ────────────────────────── */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.15;
+  }
+  25% {
+    transform: translateY(-20px) translateX(8px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-8px) translateX(-4px);
+    opacity: 0.25;
+  }
+  75% {
+    transform: translateY(-28px) translateX(6px);
+    opacity: 0.35;
+  }
+}
+
+@keyframes title-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 12px rgba(245, 200, 80, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 28px rgba(245, 200, 80, 0.5));
+  }
+}
+
+/* ── VHS / Analog Horror effects ─────────────────────── */
+
+/* CRT scanlines that scroll vertically */
+@keyframes scanlines-scroll {
+  from { background-position: 0 0; }
+  to { background-position: 0 4px; }
+}
+
+/* Dying fluorescent tube flicker — used on "Level 0" */
+@keyframes neon-flicker {
+  0%, 100% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+  1% { opacity: 0.7; text-shadow: 0 0 2px #f59e0b, 0 0 6px rgba(245, 158, 11, 0.2); }
+  2% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+  5% { opacity: 0.85; text-shadow: 0 0 1px #f59e0b; }
+  6% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+  22% { opacity: 1; }
+  23% { opacity: 0.6; text-shadow: none; }
+  24% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+  60% { opacity: 1; }
+  61% { opacity: 0.4; text-shadow: none; }
+  62% { opacity: 0.8; text-shadow: 0 0 2px #f59e0b; }
+  63% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+  88% { opacity: 1; }
+  89% { opacity: 0.5; text-shadow: none; }
+  90% { opacity: 0.9; text-shadow: 0 0 2px #f59e0b; }
+  91% { opacity: 1; text-shadow: 0 0 4px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.4); }
+}
+
+/* Glitch effect — random slice displacement */
+@keyframes glitch-slice {
+  0% { transform: translate(0); }
+  1% { transform: translate(-3px, 2px); clip-path: inset(60% 0 30% 0); }
+  2% { transform: translate(3px, -1px); clip-path: inset(10% 0 80% 0); }
+  3% { transform: translate(-1px, 1px); clip-path: inset(40% 0 50% 0); }
+  4% { transform: translate(0); clip-path: none; }
+  100% { transform: translate(0); clip-path: none; }
+}
+
+@keyframes glitch-slice-r {
+  0%, 6% { transform: translate(0); opacity: 0; }
+  1% { transform: translate(6px, -2px); clip-path: inset(30% 0 60% 0); opacity: 0.6; }
+  2% { transform: translate(-4px, 3px); clip-path: inset(70% 0 20% 0); opacity: 0.4; }
+  3% { transform: translate(2px, -1px); clip-path: inset(5% 0 85% 0); opacity: 0.5; }
+  4% { transform: translate(0); opacity: 0; }
+}
+
+/* VHS tracking line — horizontal bar that sweeps down */
+@keyframes tracking-sweep {
+  0% { transform: translateY(-5%); opacity: 0; }
+  2% { transform: translateY(-2%); opacity: 0.12; }
+  10% { transform: translateY(10%); opacity: 0.15; }
+  30% { transform: translateY(30%); opacity: 0.18; }
+  60% { transform: translateY(65%); opacity: 0.12; }
+  80% { transform: translateY(85%); opacity: 0.08; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+
+/* VHS roll / horizontal distortion bar */
+@keyframes tracking-roll {
+  0% { transform: translateY(-2%); }
+  1% { transform: translateY(-1%); }
+  100% { transform: translateY(105%); }
+}
+
+/* Breathing vignette — slow pulse */
+@keyframes breathe {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.15; }
+}
+
+/* Pulse glow on the ENTER button */
+@keyframes button-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(251, 191, 36, 0.6);
+  }
+}
+
+/* Static noise flicker (ultra-rapid opacity) — choppy, like analog static */
+@keyframes static-flicker {
+  0%, 100% { opacity: 0.035; }
+  10% { opacity: 0.04; }
+  20% { opacity: 0.03; }
+  30% { opacity: 0.045; }
+  40% { opacity: 0.035; }
+  50% { opacity: 0.04; }
+  60% { opacity: 0.03; }
+  70% { opacity: 0.042; }
+  80% { opacity: 0.035; }
+  90% { opacity: 0.038; }
+}
+
+/* ── Utility classes ─────────────────────────────────── */
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out both;
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-title-glow {
+  animation: title-glow 4s ease-in-out infinite;
+}
+
+.animate-neon-flicker {
+  animation: neon-flicker 4s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+.animate-static-flicker {
+  animation: static-flicker 0.15s steps(4) infinite;
+}
+
+.animate-tracking-sweep {
+  animation: tracking-sweep 2s ease-in-out forwards;
+}
+
+/* Button pulse uses animation-name so it can coexist with other animations */
+.animate-button-pulse {
+  animation-name: button-pulse;
+  animation-duration: 2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Menu entrance: outer menu container fades up so the whole overlay
+   (title rectangle + bottom buttons) lands together. Individual child
+   elements still use their own animate-fade-in-up delays on top of this. */
+.menu-enter {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+/* ── Camcorder / Found-Footage additions ────── */
+
+/* REC dot — hard binary blink, like a camera tally light */
+@keyframes rec-blink {
+  0%, 49.99% {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.9);
+  }
+  50%, 100% {
+    opacity: 0.22;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.35);
+  }
+}
+
+.animate-rec-blink {
+  animation: rec-blink 1s steps(1, jump-none) infinite;
+}
+
+/* Chromatic aberration — used as ghost layers on the title */
+@keyframes glitch-rgb-r {
+  0%, 92% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  93% {
+    transform: translate(-3px, 1px);
+    opacity: 0.7;
+  }
+  94% {
+    transform: translate(2px, -2px);
+    opacity: 0.55;
+  }
+  95%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes glitch-rgb-b {
+  0%, 88% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  89% {
+    transform: translate(4px, -1px);
+    opacity: 0.65;
+  }
+  90% {
+    transform: translate(-3px, 2px);
+    opacity: 0.5;
+  }
+  91%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+.animate-glitch-rgb-r {
+  animation: glitch-rgb-r 4.5s steps(60, end) infinite;
+}
+
+.animate-glitch-rgb-b {
+  animation: glitch-rgb-b 5.5s steps(60, end) infinite;
+}
+
+/* 35mm film-strip perforations on screen edges */
+@keyframes film-scroll {
+  from { background-position: 0 0, center 0; }
+  to { background-position: 0 0, center 48px; }
+}
+
+.film-strip-l,
+.film-strip-r {
+  background-color: rgba(0, 0, 0, 0.55);
+  background-size: 100% 100%, 32px 48px;
+  background-repeat: no-repeat, repeat-y;
+  background-position: 0 0, center 0;
+  animation: film-scroll 6s linear infinite;
+}
+
+.film-strip-l {
+  background-image:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%),
+    radial-gradient(circle at center, rgba(255, 241, 176, 0.22) 7px, transparent 8px);
+}
+
+.film-strip-r {
+  background-image:
+    linear-gradient(270deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%),
+    radial-gradient(circle at center, rgba(255, 241, 176, 0.22) 7px, transparent 8px);
+}
+
+/* CRT roll on Enter click */
+@keyframes enter-roll {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-enter-roll {
+  animation: enter-roll 0.6s ease-in-out;
+}
+
+/* Tools to reveal inner elements from below — used on the typewriter container */
+@keyframes reveal-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-reveal {
+  animation: reveal-up 0.6s ease-out both;
+}
+
+/* ── Intro cinematic animations ───────────────────────── */
+
+/* Big "▶ PLAY" stamp: scales + blurs in, holds, blurs back out. The
+   scale/rotation/filter keyframes sell the "tape dropping into the
+   deck" jitter that bookends the boot hold. Total 1.5 s. */
+@keyframes cinema-play-stamp {
+  0%   { opacity: 0; transform: scale(0.55) rotate(-3deg); filter: blur(8px); }
+  10%  { opacity: 1; transform: scale(1.18) rotate(-1deg); filter: blur(0); }
+  25%  { opacity: 1; transform: scale(1) rotate(0); }
+  60%  { opacity: 1; transform: scale(1) rotate(0); }
+  85%  { opacity: 0; transform: scale(1.4) rotate(2deg); filter: blur(2px); }
+  100% { opacity: 0; transform: scale(1.4) rotate(2deg); }
+}
+.cinema-play-stamp {
+  animation: cinema-play-stamp 1.5s ease-out forwards;
+}
+.cinema-play-text {
+  text-shadow:
+    5px 0 0 rgba(255,0,80,0.55),
+    -5px 0 0 rgba(0,200,255,0.55),
+    0 0 35px rgba(255,255,255,0.45);
+}
+
+/* One-shot VHS tracking sweep used during the boot hold. Pairs with the
+   menu's persistent tracking-sweep for a brief "tracking spool" feel
+   that runs once and pins at the bottom of the screen. */
+@keyframes cinema-tracking-sweep {
+  0%   { transform: translateY(-5%); opacity: 0; }
+  10%  { opacity: 0.32; }
+  50%  { opacity: 0.42; }
+  90%  { transform: translateY(105%); opacity: 0; }
+  100% { transform: translateY(105%); opacity: 0; }
+}
+.cinema-tracking {
+  position: absolute;
+  pointer-events: none;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 18%;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.18) 50%, transparent);
+  mix-blend-mode: screen;
+  animation: cinema-tracking-sweep 0.9s ease-in-out 0.05s 1 forwards;
+}
+
+/* Generic cinema fade-in: REC chip + tapemetadata at top-left/right.
+   .cinema-fade-in-late = delayed-by-1.5s version for the operator
+   text that appears when the camera-glide starts. */
+@keyframes cinema-fade-in {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.cinema-fade-in {
+  animation: cinema-fade-in 0.45s ease-out 0.20s both;
+}
+.cinema-fade-in-late {
+  animation: cinema-fade-in 0.55s ease-out 1.50s both;
+}
+
+/* Black backdrop covering the 3D scene. Hold 0.6s of pure black for the
+   VHS ▶ PLAY stamp landing, then fade to fully transparent by t=1.2 s so
+   the bedroom cinematic is visible for ~7s of the 9s runtime instead of
+   ~7s starting at t=2s with 1.5s wasted behind a black curtain. The PLAY
+   stamp still plays through its 1.5s schedule, so the bedroom
+   materialises AROUND the stamp rather than waiting for it. */
+@keyframes cinema-bg-fade {
+  0%   { opacity: 1; }
+  15%  { opacity: 1; }   /* 0.6s of opaque boot hold */
+  30%  { opacity: 0; }   /* fully transparent by t=1.2s */
+  100% { opacity: 0; }
+}
+.cinema-bg {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(0, 0, 0);
+  animation: cinema-bg-fade 4s ease-out forwards;
+}
+
+/* Match-cut flashbang that masks the hard cut from the 3D bedroom dive
+   (bright magenta TV screen at FOV 105°) into the dim yellow corridor
+   (FOV 72°). Hangs bright for the first ~100 ms so the camera swap isn’t
+   perceived, then fast-fades over 1.5 s. Replays on every restart because
+   the React layer remounts the div via key bumping. */
+@keyframes cinema-flashout {
+  0%   { opacity: 1; }
+  11%  { opacity: 0.9; }   /* hold the slam long enough for the eye to register */
+  100% { opacity: 0; }
+}
+.animate-cinema-flashout {
+  animation: cinema-flashout 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
