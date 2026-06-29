@@ -1,0 +1,44 @@
+name: CI
+
+# Run typecheck + Vite production build on every push to main so the build
+# can never silently break. Cancel in-flight runs on the same ref to save
+# minutes when a new commit lands before the previous one finishes.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Pinned to Node 22 LTS — matches `@types/node@22.x` in
+          # devDependencies and Vite 7's `engines.node` requirement
+          # (`^20.19.0 || >=22.12.0`).
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        # Fail fast on type errors before spending seconds on a build.
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
