@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+# Build the Vite production bundle on every push to main and publish it to
+# the `gh-pages` branch. The Pages site then serves `dist/` directly from
+# `gh-pages`'s root. `workflow_dispatch` lets us re-deploy without pushing
+# a commit (e.g. to recover from a bad gh-pages commit without polluting main).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Separate concurrency group from `CI` (which uses `ci-...`) so a slow
+# Pages run never queues against the typecheck/build pipeline. Cancels
+# in-flight runs on the same ref so the latest push wins.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+# `JamesIves/github-pages-deploy-action` uses the workflow's GITHUB_TOKEN
+# to push to `gh-pages`, so `contents: write` is the only permission we
+# need. We do NOT need `pages: write` — that is for the Pages environment
+# deploy path (`actions/deploy-pages`), which is not used here.
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Match `@types/node@22.x` and Vite 7's `engines.node`.
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        # Fail fast — no point publishing a build that won't compile.
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          # `force_orphan: true` creates the gh-pages branch as a fresh
+          # orphan on every deploy, so any prior gn-pages content is wiped
+          # automatically — the older `clean: true` flag adds no value.
+          force_orphan: true
+          branch: gh-pages
+          folder: dist
+          git-config-name: github-actions[bot]
+          git-config-email: github-actions[bot]@users.noreply.github.com

@@ -1,5 +1,9 @@
 # Backrooms 3D Game
 
+[![Live demo](https://img.shields.io/badge/GitHub%20Pages-Live%20demo-2ea44f?logo=github&logoColor=white)](https://dmzgamingyt.github.io/backrooms-3d-game/)
+[![CI](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/deploy.yml?branch=main&label=Deploy&logo=githubpages&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/deploy.yml)
+
 Mini-jeu d'horreur 3D inspiré du lore **Backrooms** (Level 0 / Level 1), développé en React + TypeScript + Three.js, bundlé avec Vite.
 
 ## Aperçu
