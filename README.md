@@ -1,6 +1,7 @@
 # Backrooms 3D Game
 
 [![Live demo](https://img.shields.io/badge/GitHub%20Pages-Live%20demo-2ea44f?logo=github&logoColor=white)](https://dmzgamingyt.github.io/backrooms-3d-game/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f)](./LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/ci.yml)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/deploy.yml?branch=main&label=Deploy&logo=githubpages&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/deploy.yml)
 
@@ -96,4 +97,11 @@ src/
 
 ## License
 
-Projet personnel, libre d'utilisation. Aucune dépendance propriétaire.
+Distribué sous **MIT** — voir le fichier [`LICENSE`](./LICENSE) à la racine du dépôt.
+
+En bref : réutilisation, modification, redistribution et revente autorisées, à
+condition de conserver la notice de copyright ci-dessus. Aucune garantie, aucun
+support fourni.
+
+Aucune dépendance propriétaire dans la stack (React, Three.js, Vite, Tailwind
+— toutes sous licences permissives type MIT / BSD-3 / Apache-2.0).
