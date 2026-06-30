@@ -1,5 +1,6 @@
 import { useVoice } from "./hooks/useVoice";
 import { useTasks } from "./hooks/useTasks";
+import { useTheme } from "./hooks/useTheme";
 import { Aurora } from "./components/aurora/Aurora";
 import { GlassPanel } from "./components/glass/Glass";
 import { VoiceOrb } from "./components/voice/VoiceOrb";
@@ -11,24 +12,26 @@ import { BriefingCard } from "./components/cards/BriefingCard";
 import { WeatherCard } from "./components/cards/WeatherCard";
 import { NotesCard } from "./components/cards/NotesCard";
 import { TasksPanel } from "./components/panels/TasksPanel";
+import { BackendCard } from "./components/cards/BackendCard";
 
 /**
  * Solis — root layout.
  *
  *   Aurora background   (z = -10)
- *   Header strip        (z =  20) — brand, mode toggle, clock, backend, status
+ *   Header strip        (z =  20) — brand · mode · clock · theme · backend · status
  *   Two-column main     (z =  10)
  *     Hero              — voice (orb + mic) OR text (chat thread + input)
- *     Action aside      — Briefing, Tasks, Notes, Weather
+ *     Action aside      — Briefing · Tasks · Clés API · Notes · Weather
  *
  * The voice orb uses `voice.level` (mic analyser, averaged in 30 fps
- * bursts) as its inner-ring scale, so reactivity IS real audio — not a
- * canned animation.
+ * bursts) as its inner-ring scale, so reactivity IS real audio.
+ *
+ * `useTheme` is mounted at the root so its side-effect (writing
+ * <html data-theme="...">) applies before any child renders.
  */
 export default function App() {
   const voice = useVoice();
-  // Single source of truth for tasks — passed down so BriefingCard's
-  // remaining-counter never desyncs from what TasksPanel actually shows.
+  const theme = useTheme();
   const tasksState = useTasks();
   const tasksRemaining = tasksState.tasks.filter((t) => !t.done).length;
 
@@ -57,7 +60,8 @@ export default function App() {
           onModeChange={voice.setMode}
           backendConfig={voice.backend.config}
           onBackendKind={voice.backend.setKind}
-          onBackendPatch={voice.backend.patch}
+          themePref={theme.pref}
+          onThemeCycle={theme.cycle}
         />
 
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 px-6 pb-6 pt-2 min-h-0">
@@ -98,6 +102,11 @@ export default function App() {
               onRemove={tasksState.remove}
               onEdit={tasksState.edit}
               onClearDone={tasksState.clearDone}
+            />
+            <BackendCard
+              config={voice.backend.config}
+              onPickKind={voice.backend.setKind}
+              onPatch={voice.backend.patch}
             />
             <NotesCard />
             <WeatherCard />
@@ -147,7 +156,6 @@ function VoiceHero(p: VoiceHeroProps) {
         </div>
       </div>
 
-      {/* Slim transcript strip — only when there are messages */}
       {p.transcript.length > 0 && (
         <GlassPanel variant="soft" className="max-h-44 flex flex-col overflow-hidden p-4">
           <TranscriptPanel

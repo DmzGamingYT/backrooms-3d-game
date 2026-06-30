@@ -36,6 +36,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
+  transition: background-color 600ms ease, color 600ms ease;
 }
 
 .font-display { font-family: var(--font-display); font-feature-settings: "ss01"; }
@@ -80,6 +81,7 @@ body {
   mix-blend-mode: screen;
   pointer-events: none;
   will-change: transform;
+  transition: opacity 600ms ease;
 }
 .aurora-a { background: var(--c-aurora-violet); width: 58vw; height: 58vw; animation: drift-a 34s ease-in-out infinite; top: -18vw; left: -10vw; }
 .aurora-b { background: var(--c-aurora-blue);   width: 52vw; height: 52vw; animation: drift-b 40s ease-in-out infinite; top: 28vh; right: -16vw; }
@@ -116,3 +118,68 @@ button { transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background 2
 .thin-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
 ::selection { background: rgba(139, 92, 246, 0.35); color: white; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Day theme (papier voilé) — applied when <html data-theme="day">.
+   Pure CSS overrides so we don't have to refactor 40+ components.
+   Tokens below swap; the .aurora-blob goes from `screen` (additive
+   light) to `multiply` (watercolour tint), so the same blobs read
+   as soft pastel wash instead of washing small gray text out.
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="day"] {
+  --c-bg-deep: #f4f4f0;
+  --c-bg-mid:  #ecece8;
+  --c-aurora-violet: rgba(139, 92, 246, 0.24);
+  --c-aurora-blue:   rgba(56, 189, 248, 0.26);
+  --c-aurora-rose:   rgba(244, 114, 182, 0.24);
+  --c-aurora-amber:  rgba(251, 191, 36, 0.24);
+  --c-glass-bg:     rgba(255, 255, 255, 0.55);
+  --c-glass-border: rgba(0, 0, 0, 0.07);
+  --c-text-primary:   #2d2d32;
+  --c-text-secondary: #52525b;
+  --c-text-tertiary:  #71717a;
+}
+
+[data-theme="day"] .aurora-blob {
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+
+/* Day-mode Tailwind utility overrides — slate-toned replacements of
+   the zinc scale so the existing class names stay valid. */
+[data-theme="day"] .text-zinc-100        { color: #2d2d32 !important; }
+[data-theme="day"] .text-zinc-200        { color: #3f3f46 !important; }
+[data-theme="day"] .text-zinc-300        { color: #52525b !important; }
+[data-theme="day"] .text-zinc-400        { color: #71717a !important; }
+[data-theme="day"] .text-zinc-500        { color: #6b6b75 !important; }
+[data-theme="day"] .text-zinc-600        { color: #8e8e98 !important; }
+[data-theme="day"] .text-zinc-700        { color: #a8a8b0 !important; }
+[data-theme="day"] .text-zinc-300\/85    { color: rgba(63, 63, 70, 0.85) !important; }
+[data-theme="day"] .text-zinc-500\/85    { color: rgba(107, 107, 117, 0.85) !important; }
+[data-theme="day"] .placeholder\:text-zinc-600::placeholder { color: #a1a1aa !important; }
+[data-theme="day"] .border-white\/10    { border-color: rgba(0, 0, 0, 0.10) !important; }
+[data-theme="day"] .border-white\/5     { border-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="day"] .bg-white\/10        { background-color: rgba(0, 0, 0, 0.05) !important; }
+[data-theme="day"] .bg-white\/\[0\.04\] { background-color: rgba(0, 0, 0, 0.045) !important; }
+[data-theme="day"] .bg-white\/\[0\.05\] { background-color: rgba(0, 0, 0, 0.03) !important; }
+[data-theme="day"] .bg-white\/\[0\.03\] { background-color: rgba(0, 0, 0, 0.02) !important; }
+[data-theme="day"] .bg-white\/\[0\.07\] { background-color: rgba(255, 255, 255, 0.65) !important; }
+[data-theme="day"] .decoration-zinc-700 { text-decoration-color: rgba(0, 0, 0, 0.18) !important; }
+[data-theme="day"] ::selection { background: rgba(139, 92, 246, 0.18); color: #2d2d32; }
+
+/* Night-mode text-shadow anchors for the lowest-contrast zinc scale.
+   Aurora blobs use `mix-blend-mode: screen` which brightens the bg,
+   so the smallest labels can disappear — this halo keeps them
+   legible without changing the design. (Switched off in day mode.) */
+.text-zinc-500,
+.text-zinc-600 {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+[data-theme="day"] .text-zinc-500,
+[data-theme="day"] .text-zinc-600 {
+  text-shadow: none;
+}
+
+/* Subtle scrollbar thumb swap for the day palette */
+[data-theme="day"] .thin-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.10); }
+[data-theme="day"] .thin-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.18); }

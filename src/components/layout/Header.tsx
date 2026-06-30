@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { BackendConfig, ChatMode, VoiceStatus } from "../../ai/types";
 import { fmtDateLong, fmtHMS } from "../../utils/time";
 import { BackendSwitcher } from "../controls/BackendSwitcher";
+import { ThemeToggle } from "../controls/ThemeToggle";
+import type { ThemePref } from "../../hooks/useTheme";
 
 interface Props {
   status: VoiceStatus;
@@ -9,7 +11,8 @@ interface Props {
   onModeChange: (mode: ChatMode) => void;
   backendConfig: BackendConfig;
   onBackendKind: (kind: BackendConfig["kind"]) => void;
-  onBackendPatch: (patch: Partial<BackendConfig>) => void;
+  themePref: ThemePref;
+  onThemeCycle: () => void;
 }
 
 const STATUS_LABEL: Record<VoiceStatus, string> = {
@@ -28,18 +31,19 @@ const STATUS_COLOR: Record<VoiceStatus, string> = {
 /** Pinned top strip.
  *  Left cluster  — brand mark + version pill
  *  Center cluster — chat-mode toggle (Voix / Texte)
- *  Right cluster  — live clock + BackendSwitcher + voice-status pill
+ *  Right cluster  — live clock · ThemeToggle (◐ auto / ☀ / ☾) ·
+ *                    BackendSwitcher · voice-status pill
  *
- *  The whole strip is `select-none` so it never drags a selection into
- *  the hero. Selectors keep the layout intact down to small viewports
- *  (the mode toggle and clock vanish progressively, not collapse). */
+ *  Selectors keep the layout intact down to small viewports (mode
+ *  toggle and clock vanish progressively, not collapse). */
 export function Header({
   status,
   mode,
   onModeChange,
   backendConfig,
   onBackendKind,
-  onBackendPatch,
+  themePref,
+  onThemeCycle,
 }: Props) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -60,16 +64,17 @@ export function Header({
         <ModeToggle mode={mode} onChange={onModeChange} />
       </div>
 
-      <div className="flex items-center justify-end gap-3 sm:gap-4">
+      <div className="flex items-center justify-end gap-2 sm:gap-3">
         <div className="hidden lg:flex flex-col items-end text-right">
           <span className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 capitalize">{fmtDateLong(now)}</span>
           <span className="font-mono text-sm tracking-wider text-zinc-200 mt-0.5 tabular-nums">{fmtHMS(now)}</span>
         </div>
 
+        <ThemeToggle pref={themePref} onCycle={onThemeCycle} />
+
         <BackendSwitcher
           config={backendConfig}
-          onChange={onBackendPatch}
-          onPickKind={onBackendKind}
+          onKindChange={onBackendKind}
         />
 
         <div className="hidden md:flex items-center gap-2">
