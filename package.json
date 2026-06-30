@@ -1,8 +1,9 @@
 {
-  "name": "react-vite-tailwind",
+  "name": "solis-assistant",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "description": "Solis — minimalist voice-first AI assistant with glassmorphism aurora UI and multi-backend LLM (Groq · OpenRouter Zen · Ollama).",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

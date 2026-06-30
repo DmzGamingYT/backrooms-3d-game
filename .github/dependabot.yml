@@ -1,0 +1,26 @@
+# Dependabot — auto-update dependencies on a weekly cadence.
+# Grouped by ecosystem so dev-only and runtime updates don't mix in a
+# single PR (an React bump is easy to skim; an ESLint + Vite + TS bump
+# trio is its own conversation).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+    # Cap open PRs so a flood of mid-major bumps doesn't drown the queue.
+    open-pull-requests-limit: 5
+    groups:
+      # React, three, clsx… land in one PR for fast at-a-glance review.
+      production:
+        dependency-type: "production"
+      # Vitest/Playwright/lint/Tailwind/Vite/TS all stay together.
+      development:
+        dependency-type: "development"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"

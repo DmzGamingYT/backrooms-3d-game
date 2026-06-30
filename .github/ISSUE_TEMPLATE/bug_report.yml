@@ -1,0 +1,73 @@
+name: "🐛 Bug Report"
+description: "Something isn't working as expected on the live demo or a local build."
+title: "[bug] "
+labels:
+  - "bug"
+  - "needs-triage"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! The more detail you can give, the faster
+        we can reproduce and fix. Screenshots / clips are very welcome.
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: "Difficulty played at"
+      options:
+        - "Casual"
+        - "Standard"
+        - "Hardcore"
+        - "Not applicable (game didn't start)"
+      validations:
+        required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "What happened?"
+      placeholder: "One or two sentences is fine."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Steps to reproduce"
+      placeholder: |
+        1. Open the live demo…
+        2. Click JOUER…
+        3. Pick up the first battery…
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "What did you expect?"
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: "Browser + version"
+      placeholder: "Chrome 138, Firefox 130, Safari 18…"
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: "Live demo URL (optional)"
+      placeholder: "https://dmzgamingyt.github.io/backrooms-3d-game/"
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: "Console output (optional)"
+      placeholder: |
+        Paste any errors from DevTools > Console here.

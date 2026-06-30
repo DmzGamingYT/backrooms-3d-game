@@ -1,0 +1,57 @@
+name: Lighthouse CI
+
+# Audits performance / a11y / best-practices against the built static
+# page. Asserts are kept at "warn" rather than "error" so a low score
+# on a 3D-heavy game won't gate the merge — see lighthouserc.json for
+# threshold rationale.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lhci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Match `@types/node@22.x` + Vite 7's `engines.node`.
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      # `treosh/lighthouse-ci-action` serves `staticDistDir` itself and
+      # runs the audits — no separate preview server needed. Port
+      # defaults to 9000, which matches lighthouserc.json#ci.collect.url.
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.json
+          staticDistDir: ./dist
+          uploadArtifacts: true
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}

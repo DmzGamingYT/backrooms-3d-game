@@ -1,30 +1,16 @@
-# Backrooms 3D Game
+# Solis — Assistant vocal / Voice Assistant
 
-[![Live demo](https://img.shields.io/badge/GitHub%20Pages-Live%20demo-2ea44f?logo=github&logoColor=white)](https://dmzgamingyt.github.io/backrooms-3d-game/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f)](./LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/github/actions/workflow/status/DmzGamingYT/backrooms-3d-game/deploy.yml?branch=main&label=Deploy&logo=githubpages&logoColor=white)](https://github.com/DmzGamingYT/backrooms-3d-game/actions/workflows/deploy.yml)
-
-Mini-jeu d'horreur 3D inspiré du lore **Backrooms** (Level 0 / Level 1), développé en React + TypeScript + Three.js, bundlé avec Vite.
-
-## Aperçu
-
-- Labyrinthe procédural de couloirs jaunes avec papier-peint moisi
-- Brouillard volumétrique, éclairage industriel ondulant, post-FX cinéma (bloom + vignette + grain)
-- Un **stalker** qui te traque par pathfinding BFS
-- Système d'items : **eau d'amande** (régénère le sanity) et **piles** (rechargent la lampe torche)
-- Lampe torche à batterie limitée — refuse de s'allumer si les piles sont à zéro
-- HUD avec barres (Sanity / Stamina), minimap pivotée autour du joueur, compteur d'items, indicateur d'orientation du monstre
-- Écran de fin de partie avec stats (temps, distance, % exploré, items trouvés, near-misses)
-- 3 variantes procédurales de papier-peint (défaut / eau / béton) + décorations (escalier descendant, affiches)
+A minimalist voice-first AI assistant built with React + Vite + TypeScript. Glass interface over an animated aurora, real-time audio-reactive orb in the center, persistent conversation memory, and a unified runtime backend switcher for **Groq** (free tier), **OpenRouter Zen** (free models), and **Ollama** (local).
 
 ## Stack
 
-- **React 19** + **TypeScript 5.9**
-- **Three.js 0.185** (rendu WebGL)
-- **Vite 7** (dev server + bundler, sortie **single-file HTML**)
-- **Tailwind 4** (HUD overlay)
-- Audio 100 % procédural via `AudioContext` — pas de fichiers son à charger
+- **React 19.2** + **TypeScript 5.9** strict + **Vite 7**
+- **Tailwind 4** — utility CSS + design tokens in CSS variables
+- **Web Speech API** — `SpeechRecognition` (STT) + `speechSynthesis` (TTS)
+- **Web Audio API** + `AnalyserNode` for real-time orb reactivity
+- **OpenAI-compatible `/v1/chat/completions`** — Groq, OpenRouter Zen, Ollama (≥0.5)
+- **localStorage** persistence — transcript, tasks, notes, backend config
+- `vite-plugin-singlefile` — single-file production bundle (trivial GH Pages deploy)
 
 ## Démarrer
 
@@ -33,75 +19,61 @@ npm install
 npm run dev
 ```
 
-Ouvre `http://localhost:5173` — la cinématique Level 1 démarre, clique pour entrer dans le labyrinthe.
+Open `http://localhost:5173`, allow the microphone, tap the orb or the mic pill. Solis transcribes what you say (fr-FR by default, picked from `navigator.language`) and replies out loud via TTS.
 
-## Build de production
+To enable a real LLM: click the **“Démo”** pill in the top-right header → pick Groq / OpenRouter Zen / Ollama → paste your key (or endpoint for local Ollama). The model field accepts an override; defaults match each provider's *free* tier.
 
-```bash
-npm run build
-```
+## Backends LLM
 
-`dist/index.html` est généré en un seul fichier autonome grâce à `vite-plugin-singlefile` (utilisable via `file://`).
+| Backend        | Where it runs | Cost       | Auth                              | Notes                                       |
+| -------------- | ------------- | ---------- | --------------------------------- | ------------------------------------------- |
+| **Démo**       | local (echo)  | gratuit    | aucune                            | Default fallback; useful when offline       |
+| **Groq**       | cloud         | tier gratuit | clé API `gsk_…`                  | Llama 3.x · Mixtral · Gemma                  |
+| **OpenRouter Zen** | cloud       | tier gratuit | clé API `sk-or-…`               | Pool de modèles `…:free`                    |
+| **Ollama**     | local         | gratuit    | endpoint (defaut `http://localhost:11434`) | Lance `ollama serve` côté machine           |
 
-## Contrôles
-
-| Touche | Effet |
-|--------|-------|
-| `↑ ↓ ← →` / `WASD` | Se déplacer |
-| Souris | Regarder autour |
-| `Clic gauche` (intro) | Démarrer |
-| `F` | Allumer / éteindre la lampe torche |
-| `Maj.` (maintenir) | Sprint (consomme la stamina) |
-| `Échap` | Pause |
-| `R` (HUD pause) | Restart |
-
-## Difficultés
-
-| Mode | Stalker | Lampe (par pile) |
-|------|---------|------------------|
-| **Casual** | Lent, spawn tardif | 40 s |
-| **Standard** | Normal | 25 s |
-| **Hardcore** | Agressif, spawn rapide | 15 s |
+The provider abstraction (`LLMProvider`) and the SSE consumer (`openaiCompatibleStream`) live in `src/ai/providers/`. Switching backend at runtime is a single config flip — no UI tear-down, no re-mount — `AIManager` builds a new provider on the next token burst.
 
 ## Architecture
 
 ```
 src/
-├─ App.tsx              Root React + HUD + écrans menu/pause/fin
-├─ main.tsx             Point d'entrée Vite
-├─ index.css            Tailwind + resets
-├─ utils/cn.ts          Helper classnames
-└─ game/
-   ├─ BackroomsGame.ts  Chef d'orchestre : update / draw / events
-   ├─ world.ts          InstancedMesh des murs + sol + plafond + décorations
-   ├─ maze.ts           Génération du labyrinthe + spawns
-   ├─ player.ts         Déplacements + stamina + flashlightBatTimer
-   ├─ monster.ts        IA stalker (BFS pathfinding)
-   ├─ items.ts          Eau d'amande + piles + raycasts de pickup
-   ├─ lighting.ts       Lumières scène + flashlight
-   ├─ postfx.ts         Bloom + grain + vignette
-   ├─ audio.ts          Sons procéduraux (pickup, flashlight, pas…)
-   ├─ textures.ts       3 variantes de papier-peint procédurales
-   ├─ dust.ts           Particules de poussière en l'air
-   ├─ intro.ts          Cinématique d'intro (Level 1 image)
-   ├─ grid.ts           Helpers de grille
-   ├─ tuning.ts         Tuning par difficulté
-   └─ types.ts          Types partagés (HudState, RunStats, GameCallbacks)
+├─ ai/
+│  ├─ providers/        # groq · openrouter · ollama · mock — interface LLMProvider
+│  ├─ openaiCompatible.ts # parseur SSE partagé (data: …\n\n)
+│  ├─ manager.ts         # AIManager + SOLIS_SYSTEM_PROMPT
+│  ├─ processText.ts     # stripMarkdown avant TTS
+│  └─ speech/webSpeech.ts # SpeechRecognition + speechSynthesis wrappers
+├─ components/
+│  ├─ aurora/            # fond animé + grain SVG
+│  ├─ glass/             # GlassPanel · GlassButton (default/soft/heavy)
+│  ├─ voice/             # VoiceOrb (audio-réactif) · MicButton
+│  ├─ chat/              # TranscriptPanel · ChatInput (mode texte)
+│  ├─ cards/             # Briefing · Weather (stub) · Notes
+│  ├─ panels/            # Tasks + TaskForm + TaskItem
+│  ├─ controls/          # BackendSwitcher (glass pop-over)
+│  └─ layout/            # Header (mode Voix/Texte · horloge · status)
+├─ hooks/
+│  ├─ useVoice.ts        # master conversation hook (status, mode, transcript, audio analyser)
+│  ├─ useAssistant.ts    # run() — stream → bubble → TTS ; abort via runId bump
+│  ├─ useBackend.ts      # BackendConfig + clé API + model override
+│  ├─ useMemory.ts       # bloc-notes (scratchpad string)
+│  └─ useTasks.ts        # liste de tâches CRUD + reorder
+└─ utils/
+   ├─ storage.ts         # loadJSON / saveJSON / uid (localeStorage thin-wrappers)
+   ├─ time.ts            # fr-FR formatters (formats clock + date longue)
+   └─ cn.ts              # clsx wrapper
 ```
+
+## Design notes
+
+- **Aurora** — quatre `radial-gradient` flous sur courbes de Lissajous, CSS pur (pas de canvas/WebGL pour le fond — préserve le GPU pour l'orb).
+- **Grain** — `<feTurbulence>` SVG inline en `mix-blend-overlay` à 6 % ; pellicule analogique à coût zéro.
+- **Glass** — `backdrop-filter: blur(28px) saturate(1.3)` + inset highlight + box-shadow. Trois variantes : `default`, `soft`, `heavy`.
+- **VoiceOrb** — trois anneaux concentriques. L'anneau intérieur réagit au niveau micro via `AnalyserNode.getByteFrequencyData` lissé en EMA, poussé à 10 fps pour ne pas re-render React trop souvent.
+- **Typo** — `Inter` pour l'UI, `Fraunces` pour les titres ; contraste graphique entre données et prose.
 
 ## Crédits
 
-- Photos `BEDROOM-*.png` : images de référence Level 1 (utilisées uniquement par la cinématique d'intro)
-- Textures de murs / sol / plafond / eau : 100 % procédurales (canvas 2D, zéro asset externe)
-- Aucun asset 3D téléchargé — toute la géométrie est générée en code
-
-## License
-
-Distribué sous **MIT** — voir le fichier [`LICENSE`](./LICENSE) à la racine du dépôt.
-
-En bref : réutilisation, modification, redistribution et revente autorisées, à
-condition de conserver la notice de copyright ci-dessus. Aucune garantie, aucun
-support fourni.
-
-Aucune dépendance propriétaire dans la stack (React, Three.js, Vite, Tailwind
-— toutes sous licences permissives type MIT / BSD-3 / Apache-2.0).
+- Polices : Inter (OFL) et Fraunces (OFL) via Google Fonts.
+- Aucun autre asset externe ; totale autonomie — animations 100 % CSS + SVG.

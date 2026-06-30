@@ -1,0 +1,44 @@
+name: "✨ Feature Request"
+description: "Suggest a new feature, polish pass, or quality-of-life improvement."
+title: "[feat] "
+labels:
+  - "enhancement"
+  - "discussion"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the feature you'd like to see. A motivating scenario
+        is even better — what were you trying to do and how would the
+        feature help?
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem it solves"
+      placeholder: "When I run out of batteries late-game I get lost and don't know which way the exit is…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Proposed solution"
+      placeholder: "How should it work? UI, controls, audio cue, achievement…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives considered"
+    validations:
+      required: false
+
+  - type: checkbox
+    id: willing
+    attributes:
+      label: "Willingness"
+      description: "Optional — keep both checked states allowed so it's a soft signal."
+      options:
+        - label: "I'd be willing to submit a PR for this if we agree on the design"
