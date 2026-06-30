@@ -1,5 +1,17 @@
 # Solis — Assistant vocal / Voice Assistant
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-night.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/hero-day.png">
+    <img alt="Solis — assistant vocal français, glassmorphism + aurore animée" src="docs/screenshots/hero-night.png" width="100%">
+  </picture>
+</p>
+
+<p align="center">
+  <img alt="Démonstration du flow vocal Solis (écoute → traitement → réponse)" src="docs/screenshots/flow-demo.gif" width="640">
+</p>
+
 A minimalist voice-first AI assistant built with React + Vite + TypeScript. Glass interface over an animated aurora, real-time audio-reactive orb in the center, persistent conversation memory, and a unified runtime backend switcher for **Groq** (free tier), **OpenRouter Zen** (free models), and **Ollama** (local).
 
 ## Stack
