@@ -105,7 +105,7 @@ src/
 
 PRs bienvenues. Pour ajouter un skill : dépose un fichier dans `src/ai/skills/`, déclare-le dans [`SKILL_REGISTRY`](src/ai/skills/registry.ts). Chaque skill est exporté sous forme de `SkillDefinition` (OpenAI-compat `type: 'function'`).
 
-À chaque push vers `main`, la CI typecheck, build, deploy sur GH Pages, régénère les assets visuels et tourne Lighthouse.
+À chaque push vers `main`, la CI typecheck, build, régénère les assets visuels et tourne Lighthouse.
 
 ## 📜 Licence & crédits
 
