@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: "Something isn't working as expected on the live demo or a local build."
+description: "Something isn't working as expected on a local build."
 title: "[bug] "
 labels:
   - "bug"
@@ -36,7 +36,7 @@ body:
     attributes:
       label: "Steps to reproduce"
       placeholder: |
-        1. Open the live demo…
+        1. Start the local dev server…
         2. Click JOUER…
         3. Pick up the first battery…
     validations:
@@ -56,14 +56,6 @@ body:
       placeholder: "Chrome 138, Firefox 130, Safari 18…"
     validations:
       required: true
-
-  - type: input
-    id: url
-    attributes:
-      label: "Live demo URL (optional)"
-      placeholder: "https://dmzgamingyt.github.io/backrooms-3d-game/"
-    validations:
-      required: false
 
   - type: textarea
     id: console

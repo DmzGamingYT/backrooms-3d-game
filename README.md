@@ -68,7 +68,7 @@ Solis expose ses capacités au LLM sous forme de tools (canal `tool_calls` Groq 
 **Voix / audio** — Web Speech API · Web Audio API · `AnalyserNode` (10 fps EMA)
 **LLM** — OpenAI-compat `/v1/chat/completions` SSE (Groq · OpenRouter Zen · Ollama ≥ 0.5)
 **Persistance** — `localStorage` (transcript, tasks, notes, backend config, skill toggles)
-**Shipping** — `vite-plugin-singlefile` → single-file bundle, trivial GH Pages deploy
+**Shipping** — `vite-plugin-singlefile` → single-file bundle
 
 ## 🌐 Backends LLM
 
