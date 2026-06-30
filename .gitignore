@@ -48,3 +48,8 @@ lerna-debug.log*
 *.bak
 *.orig
 .cache/
+
+# ─── Playwright transient outputs (artifacts, not source) ──
+test-results/
+playwright-report/
+.playwright/
