@@ -1,0 +1,91 @@
+name: 🎨 Regenerate visual assets
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/screenshots/**'
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Forcer la régénération même si peu a changé'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: assets-regenerate
+  cancel-in-progress: true
+
+jobs:
+  assets:
+    name: Capture hero + GIF
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 💾 Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: 📦 Install deps
+        run: npm ci
+
+      - name: 🌐 Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 🏗 Build
+        run: npm run build
+
+      - name: 🚀 Preview + capture
+        run: |
+          npm run preview -- --port 4173 --strictPort &
+          npx wait-on http://localhost:4173 -t 60000
+          npx playwright test scripts/assets.spec.ts --reporter=list
+        env:
+          SOLIS_BASE_URL: http://localhost:4173
+
+      - name: 🔍 Verify outputs
+        run: |
+          ls -la docs/screenshots/
+          du -h docs/screenshots/*.png docs/screenshots/*.gif || true
+          test -f docs/screenshots/hero-day.png
+          test -f docs/screenshots/hero-night.png
+          test -f docs/screenshots/social-day.png
+          test -f docs/screenshots/social-night.png
+          test -f docs/screenshots/flow-demo.gif
+          gif_size=$(stat -c%s docs/screenshots/flow-demo.gif)
+          if [ "$gif_size" -gt 5242880 ]; then
+            echo "❌ GIF trop lourd: ${gif_size} bytes (max 5 MB)"; exit 1;
+          fi
+          echo "✅ Assets regenerated successfully"
+
+      - name: 📤 Commit assets back
+        if: success()
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: |
+            chore(assets): regenerate visual assets
+
+            [skip ci]
+          file_pattern: |
+            docs/screenshots/*
