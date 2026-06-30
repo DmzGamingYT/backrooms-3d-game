@@ -49,6 +49,7 @@ export function VoiceOrb({ status, level, onClick }: Props) {
   return (
     <button
       type="button"
+      data-orb-state={status}
       onClick={onClick}
       aria-label="Solis orb — appuyez pour parler"
       className={`relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${animClass}`}
