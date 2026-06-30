@@ -8,11 +8,10 @@
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![React 19](https://img.shields.io/badge/React-19-149eca)](https://react.dev)
 [![TypeScript strict](https://img.shields.io/badge/TS-strict-3178c6)](https://www.typescriptlang.org)
-[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-brightgreen)](https://dmzgamingyt.github.io/solis-assistant/)
 [![Lighthouse CI](https://img.shields.io/badge/Lighthouse-passing-success)](./.github/workflows/lighthouse.yml)
 [![Assets auto-regen](https://img.shields.io/badge/assets-CI-blueviolet)](./.github/workflows/assets.yml)
 
-[🌐 Live demo](https://dmzgamingyt.github.io/solis-assistant/) · [📸 Captures](docs/screenshots/) · [🚀 Démarrer en 30s](#-démarrer-en-30-secondes)
+[📸 Captures](docs/screenshots/) · [🚀 Démarrer en 30s](#-démarrer-en-30-secondes)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hero-night.png">
@@ -42,8 +41,6 @@ npm install
 npm run dev
 # → http://localhost:5173, autorise le micro, tape l'orb.
 ```
-
-> Ou regarde directement la **démo publique** : [dmzgamingyt.github.io/solis-assistant](https://dmzgamingyt.github.io/solis-assistant/).
 
 Pour brancher un vrai LLM : clique sur la pill **« Démo »** en haut à droite → choisis Groq / OpenRouter Zen / Ollama → colle ta clé (ou l'endpoint pour Ollama local). Le champ `model` accepte un override ; par défaut, chaque provider utilise son *tier gratuit*.
 
