@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
-import type { TranscriptEntry } from "../../ai/types";
+import type { MessageEntry, TranscriptEntry } from "../../ai/types";
 import { fmtTime } from "../../utils/time";
+import { ToolChip } from "./ToolChip";
+import type { ReactElement } from "react";
 
 interface Props {
   transcript: TranscriptEntry[];
@@ -10,12 +12,14 @@ interface Props {
 }
 
 /**
- * Autoscrolling transcript column. Each entry fades in on append; the
+ * Autoscrolling transcript column. Each row fades in on append; the
  * currently-empty assistant row shows muted italic dots so users know
- * tokens are still landing. Optional clear button (only visible when
+ * tokens are still landing. Tool chips are interleaved in the same
+ * scroll so users see the assistant's reasoning + side-effects in
+ * chronological order. Optional clear button (only visible when
  * there's content to clear).
  */
-export function TranscriptPanel({ transcript, interim, onClear }: Props) {
+export function TranscriptPanel({ transcript, interim, onClear }: Props): ReactElement {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,25 +47,27 @@ export function TranscriptPanel({ transcript, interim, onClear }: Props) {
           </div>
         )}
         {transcript.map((m) => {
-          const isPendingAssistant = m.role === "assistant" && m.text === "";
-          return (
-            <div
-              key={m.id}
-              className={`transcript-in ${isPendingAssistant ? "opacity-60" : ""} ${m.role === "assistant" ? "speak-pulse" : ""}`}
-            >
-              <div className="flex items-baseline justify-between gap-2 mb-1 text-[9px] uppercase tracking-[0.3em] text-zinc-500">
-                <span>{m.role === "user" ? "Vous" : "Solis"}</span>
-                <span className="font-mono opacity-65">{fmtTime(m.timestamp)}</span>
-              </div>
-              <div className={`text-sm leading-relaxed whitespace-pre-wrap ${m.role === "assistant" ? "text-amber-100/95" : "text-zinc-200"}`}>
-                {m.text || <span className="italic opacity-60">…</span>}
-              </div>
-            </div>
-          );
+          if (m.kind === "tool") return <ToolChip key={m.id} chip={m} />;
+          return <MessageRow key={m.id} entry={m} />;
         })}
         {interim && (
           <div className="text-sm italic text-zinc-400/80">{interim}…</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function MessageRow({ entry }: { entry: MessageEntry }): ReactElement {
+  const isPendingAssistant = entry.role === "assistant" && entry.text === "";
+  return (
+    <div className={`transcript-in ${isPendingAssistant ? "opacity-60" : ""} ${entry.role === "assistant" ? "speak-pulse" : ""}`}>
+      <div className="flex items-baseline justify-between gap-2 mb-1 text-[9px] uppercase tracking-[0.3em] text-zinc-500">
+        <span>{entry.role === "user" ? "Vous" : "Solis"}</span>
+        <span className="font-mono opacity-65">{fmtTime(entry.timestamp)}</span>
+      </div>
+      <div className={`text-sm leading-relaxed whitespace-pre-wrap ${entry.role === "assistant" ? "text-amber-100/95" : "text-zinc-200"}`}>
+        {entry.text || <span className="italic opacity-60">…</span>}
       </div>
     </div>
   );

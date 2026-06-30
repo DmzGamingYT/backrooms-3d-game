@@ -1,6 +1,5 @@
+import { useEffect, useState, type ReactElement } from "react";
 import { useVoice } from "./hooks/useVoice";
-import { useTasks } from "./hooks/useTasks";
-import { useTheme } from "./hooks/useTheme";
 import { Aurora } from "./components/aurora/Aurora";
 import { GlassPanel } from "./components/glass/Glass";
 import { VoiceOrb } from "./components/voice/VoiceOrb";
@@ -12,7 +11,7 @@ import { BriefingCard } from "./components/cards/BriefingCard";
 import { WeatherCard } from "./components/cards/WeatherCard";
 import { NotesCard } from "./components/cards/NotesCard";
 import { TasksPanel } from "./components/panels/TasksPanel";
-import { BackendCard } from "./components/cards/BackendCard";
+import { BackendSwitcher } from "./components/controls/BackendSwitcher";
 
 /**
  * Solis — root layout.
@@ -21,29 +20,26 @@ import { BackendCard } from "./components/cards/BackendCard";
  *   Header strip        (z =  20) — brand · mode · clock · theme · backend · status
  *   Two-column main     (z =  10)
  *     Hero              — voice (orb + mic) OR text (chat thread + input)
- *     Action aside      — Briefing · Tasks · Clés API · Notes · Weather
+ *     Action aside      — Briefing · Tâches · Notes · Météo
  *
- * The voice orb uses `voice.level` (mic analyser, averaged in 30 fps
- * bursts) as its inner-ring scale, so reactivity IS real audio.
+ * BackendSwitcher is the SINGLE source of truth for backend config +
+ * Discord webhook + skill toggles. BackendCard is gone — the popover
+ * hosts everything related to AI configuration.
  *
- * `useTheme` is mounted at the root so its side-effect (writing
- * <html data-theme="...">) applies before any child renders.
+ * `useVoice` centralises: backend, tasks, memory, skills, voice state,
+ * transcript + tool chips. The notify surface renders a small toast
+ * in the upper-right so skill executions don't disappear silently.
  */
-export default function App() {
+export default function App(): ReactElement {
   const voice = useVoice();
-  const theme = useTheme();
-  const tasksState = useTasks();
-  const tasksRemaining = tasksState.tasks.filter((t) => !t.done).length;
+  const tasksRemaining = voice.tasks.tasks.filter((t) => !t.done).length;
 
   const statusMicrocopy = (() => {
     switch (voice.status) {
-      case "idle":
-        return voice.mode === "voice"
-          ? "Touchez l'orb ou le micro pour parler."
-          : "Posez votre première question ci-dessous.";
-      case "listening":  return "Je vous écoute…";
-      case "processing": return "Je réfléchis…";
-      case "speaking":   return "Je lis ma réponse à voix haute.";
+      case "idle":      return voice.mode === "voice" ? "Touchez l'orb ou le micro pour parler." : "Posez votre première question ci-dessous.";
+      case "listening": return "Je vous écoute…";
+      case "processing":return "Je réfléchis…";
+      case "speaking":  return "Je lis ma réponse à voix haute.";
     }
   })();
 
@@ -60,9 +56,21 @@ export default function App() {
           onModeChange={voice.setMode}
           backendConfig={voice.backend.config}
           onBackendKind={voice.backend.setKind}
-          themePref={theme.pref}
-          onThemeCycle={theme.cycle}
+          themePref={voice.theme.pref}
+          onThemeCycle={voice.theme.cycle}
+          slotActions={
+            <BackendSwitcher
+              config={voice.backend.config}
+              onPickKind={voice.backend.setKind}
+              onPatch={voice.backend.patch}
+              skillToggles={voice.skills.toggles}
+              onSkillToggle={voice.skills.toggle}
+              onResetSkills={voice.skills.reset}
+            />
+          }
         />
+
+        <NotifyToast text={voice.notifyText} />
 
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 px-6 pb-6 pt-2 min-h-0">
           {/* ───── Hero ─────────────────────────────────────── */}
@@ -96,19 +104,18 @@ export default function App() {
           <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-1 thin-scroll pb-2">
             <BriefingCard tasksRemaining={tasksRemaining} />
             <TasksPanel
-              tasks={tasksState.tasks}
-              onAdd={tasksState.add}
-              onToggle={tasksState.toggle}
-              onRemove={tasksState.remove}
-              onEdit={tasksState.edit}
-              onClearDone={tasksState.clearDone}
+              tasks={voice.tasks.tasks}
+              onAdd={voice.tasks.add}
+              onToggle={voice.tasks.toggle}
+              onRemove={voice.tasks.remove}
+              onEdit={voice.tasks.edit}
+              onClearDone={voice.tasks.clearDone}
             />
-            <BackendCard
-              config={voice.backend.config}
-              onPickKind={voice.backend.setKind}
-              onPatch={voice.backend.patch}
+            <NotesCard
+              notes={voice.memory.notes}
+              setNotes={voice.memory.setNotes}
+              clear={voice.memory.clearNotes}
             />
-            <NotesCard />
             <WeatherCard />
           </aside>
         </main>
@@ -130,7 +137,7 @@ interface VoiceHeroProps {
   onClear: () => void;
 }
 
-function VoiceHero(p: VoiceHeroProps) {
+function VoiceHero(p: VoiceHeroProps): ReactElement {
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-6 py-6">
       <div className="flex-1 flex flex-col items-center justify-center select-none">
@@ -180,7 +187,7 @@ interface TextHeroProps {
   onClear: () => void;
 }
 
-function TextHero(p: TextHeroProps) {
+function TextHero(p: TextHeroProps): ReactElement {
   return (
     <div className="flex-1 flex flex-col min-h-0 gap-4 py-6">
       <div className="text-center">
@@ -203,6 +210,26 @@ function TextHero(p: TextHeroProps) {
       {p.error && (
         <p className="text-[11px] text-rose-300/90 px-1">{p.error}</p>
       )}
+    </div>
+  );
+}
+
+// ────────────── Toast ───────────────────────────────────────────
+
+function NotifyToast({ text }: { text: string | null }): ReactElement | null {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (text) { setVisible(true); }
+    else { const id = window.setTimeout(() => setVisible(false), 240); return () => clearTimeout(id); }
+  }, [text]);
+  if (!visible || !text) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed top-20 right-6 z-40 glass rounded-xl px-3 py-2 text-[11px] text-zinc-200 leading-relaxed shadow-lg max-w-sm"
+    >
+      {text}
     </div>
   );
 }

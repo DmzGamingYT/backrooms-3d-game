@@ -1,4 +1,4 @@
-import type { ChatOptions, LLMMessage } from "../types";
+import type { ChatOptions, LLMMessage, StreamChunk } from "../types";
 import type { LLMProvider } from "./types";
 import { openaiCompatibleStream } from "./openaiCompatible";
 
@@ -20,7 +20,7 @@ export class OllamaProvider implements LLMProvider {
   async *streamChat(
     messages: LLMMessage[],
     options?: ChatOptions,
-  ): AsyncGenerator<string, void, undefined> {
+  ): AsyncGenerator<StreamChunk, void, undefined> {
     if (!this.isConfigured()) throw new Error("Endpoint Ollama manquant.");
     // Strip trailing slash so `/v1/...` doesn't double up.
     const base = this.endpoint.trim().replace(/\/+$/, "");
@@ -29,9 +29,10 @@ export class OllamaProvider implements LLMProvider {
       headers: {},
       body: {
         model: options?.model ?? this.model,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages: messages.map((m) => ({ role: m.role, content: m.content, tool_call_id: m.tool_call_id, name: m.name, tool_calls: m.tool_calls })),
         stream: true,
         temperature: options?.temperature ?? 0.7,
+        ...(options?.tools && options.tools.length > 0 ? { tools: options.tools } : {}),
       },
       signal: options?.signal,
     });

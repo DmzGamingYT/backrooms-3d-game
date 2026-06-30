@@ -9,6 +9,10 @@ import type { ChatMode, TranscriptEntry, VoiceStatus } from "../ai/types";
 import { AIManager } from "../ai/manager";
 import { useBackend } from "./useBackend";
 import { useAssistant } from "./useAssistant";
+import { useMemory } from "./useMemory";
+import { useSkills } from "./useSkills";
+import { useTasks } from "./useTasks";
+import { useTheme } from "./useTheme";
 import { loadJSON, saveJSON } from "../utils/storage";
 
 const TRANSCRIPT_KEY = "solis.transcript.v1";
@@ -17,14 +21,32 @@ const MODE_KEY = "solis.mode.v1";
 /**
  * Unified conversation hook — owns transcript, voice state machine,
  * audio-reactivity level for the orb, and exposes both `toggleVoice`
- * (mic round-trip) and `sendMessage` (text round-trip). Both paths reach
- * the same `useAssistant.run(...)` so backend behaviour is identical.
+ * (mic round-trip) and `sendMessage` (text round-trip). Both paths
+ * reach the same `useAssistant.run(...)` so backend behaviour is
+ * identical.
+ *
+ * Skill wiring: ref-builds a SkillContext whenever tasks/notes/facts
+ * change so skill.execute(...) always sees fresh app state.
  */
 export function useVoice() {
   const backend = useBackend();
+  const tasksState = useTasks();
+  const memory = useMemory();
+  const skills = useSkills();
+  const theme = useTheme();
 
-  // Lazy-init the AIManager on first render so the constructor never sees
-  // a stale `defaultConfig` sneak through the spread.
+  // Generic UI toast surfaced through `notify()`. Kept internal so the
+  // outside doesn't need to plumb a toast provider for V1.
+  const [notifyText, setNotifyText] = useState<string | null>(null);
+  const notifyTimer = useRef<number | null>(null);
+  const notify = useCallback((msg: string) => {
+    setNotifyText(msg);
+    if (notifyTimer.current) window.clearTimeout(notifyTimer.current);
+    notifyTimer.current = window.setTimeout(() => setNotifyText(null), 2400);
+  }, []);
+
+  // Lazy-init the AIManager on first render so the constructor never
+  // sees a stale defaultConfig sneak through the spread.
   const managerRef = useRef<AIManager | null>(null);
   if (managerRef.current === null) {
     managerRef.current = new AIManager(backend.config);
@@ -32,6 +54,9 @@ export function useVoice() {
   useEffect(() => {
     managerRef.current?.setConfig(backend.config);
   }, [backend.config]);
+
+  const configRef = useRef(backend.config);
+  useEffect(() => { configRef.current = backend.config; }, [backend.config]);
 
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [transcript, setTranscript] = useState<TranscriptEntry[]>(() =>
@@ -58,13 +83,42 @@ export function useVoice() {
     if (typeof window !== "undefined") window.localStorage.setItem(MODE_KEY, mode);
   }, [mode]);
 
+  // Live SkillContext builder — memoised on every changing input so
+  // skill.execute() always sees the current app state without us
+  // building an outdated snapshot.
+  const buildCtx = useCallback(() => skills.buildCtx({
+    tasks: tasksState.tasks,
+    addTask: tasksState.add,
+    removeTask: tasksState.remove,
+    toggleTask: tasksState.toggle,
+    clearDoneTasks: tasksState.clearDone,
+    notes: memory.notes,
+    setNotes: memory.setNotes,
+    facts: memory.facts,
+    rememberFact: memory.rememberFact,
+    forgetFact: memory.forgetFact,
+    transcript: transcriptRef.current,
+    discordWebhookUrl: backend.config.discordWebhookUrl,
+    pickFiles: pickFilesViaInput,
+    readFile: readTextFile,
+    saveBlob: saveBlobViaAnchor,
+    openMailto: (to, subject, body) => {
+      const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(url, "_self");
+    },
+    notify,
+  }), [skills, tasksState, memory, backend.config.discordWebhookUrl, notify]);
+
   const assistant = useAssistant({
     managerRef,
     transcriptRef,
     setTranscript,
-    onError: setError,
+    onError: (msg) => { setError(msg); setStatus("idle"); },
     onSpeaking: () => setStatus("speaking"),
     onIdle: () => setStatus("idle"),
+    effectiveSkills: skills.effectiveSkills,
+    buildCtx,
+    configRef,
   });
 
   // ───── Audio analyser loop, only while we're actively listening. ────
@@ -103,8 +157,6 @@ export function useVoice() {
         const tick = () => {
           if (cancelled || !refs.analyser) return;
           refs.analyser.getByteFrequencyData(buf);
-          // Lower-half average so the orb reacts to voice fundamentals
-          // (≈300–3000 Hz bins) and ignores hiss / desktop noise.
           const len = Math.min(48, buf.length);
           let sum = 0;
           for (let i = 0; i < len; i++) sum += buf[i];
@@ -148,10 +200,6 @@ export function useVoice() {
       setInterim("");
       const ok = startStt({
         onInterim: (t) => setInterim(t),
-        // onFinal is fired exactly once at session end with the joined
-        // transcript. We DON'T push the user entry here — `stopStt()`'s
-        // promise + `assistant.run(...)` does it atomically below so the
-        // transcript gets exactly one user row per turn.
         onFinal: () => { /* see stopStt path */ },
         onError: (e) => {
           setError(e.message);
@@ -172,13 +220,10 @@ export function useVoice() {
       });
       return;
     } else if (status === "speaking") {
-      // Cancel TTS + abort any in-flight LLM stream
       stopSpeaking();
       assistant.abort();
       setStatus("idle");
     }
-    // status === "processing": intentionally no-op so the user can't
-    // double-trigger runs while the assistant is partway through.
   }, [status, assistant]);
 
   const sendMessage = useCallback((text: string) => {
@@ -208,5 +253,83 @@ export function useVoice() {
     sendMessage,
     clear,
     backend,
+    tasks: tasksState,
+    memory,
+    skills,
+    theme,
+    notifyText,
   };
+}
+
+/* ───── file IO helpers used as the file-system skill surface ───── */
+
+/** Open an OS file picker. Browsers don't fire `oncancel` reliably on
+ *  `<input type="file">`, so we listen for the dialog focus hand-back
+ *  (window receives focus back AND `document.body` focus returns). When
+ *  that happens without a change event, we resolve to [] and clean up. */
+function pickFilesViaInput(accept?: string): Promise<File[]> {
+  return new Promise((resolve) => {
+    const el = document.createElement("input");
+    el.type = "file";
+    el.multiple = true;
+    if (accept) el.accept = accept;
+    el.style.display = "none";
+    document.body.appendChild(el);
+
+    let settled = false;
+    const cleanup = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("focus", onFocusBack, true);
+      // Defer one tick so onchange can still fire if it races us.
+      window.setTimeout(() => {
+        if (el.parentNode) el.remove();
+      }, 0);
+    };
+    const settle = (files: File[]) => { cleanup(); resolve(files); };
+
+    const focusTimer = window.setTimeout(() => settle([]), 5 * 60_000); // hard cap
+
+    const onFocusBack = () => {
+      // Browsers hand focus back to `window` shortly after the dialog
+      // closes. onchange fires before this if a file was selected; if
+      // we reach this listener first, treat it as a cancellation.
+      // 800 ms grace window covers slow volumes (NFS, OneDrive, large
+      // network filesystems) that occasionally take > 250 ms to surface
+      // the chosen files into onchange.
+      window.setTimeout(() => {
+        if (!settled && (!el.files || el.files.length === 0)) settle([]);
+      }, 800);
+    };
+    window.addEventListener("focus", onFocusBack, true);
+
+    el.onchange = () => settle(Array.from(el.files ?? []));
+    el.click();
+  });
+}
+
+async function readTextFile(file: File, maxBytes = 200_000): Promise<string> {
+  if (file.size > maxBytes) {
+    return `Fichier trop volumineux (${file.size} octets — limite ${maxBytes}). Réduis la taille ou colle le texte directement.`;
+  }
+  return await file.text();
+}
+
+function saveBlobViaAnchor(filename: string, blob: Blob): Promise<void> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+      resolve();
+    }, 0);
+  });
 }

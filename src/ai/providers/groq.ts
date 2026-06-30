@@ -1,4 +1,4 @@
-import type { ChatOptions, LLMMessage } from "../types";
+import type { ChatOptions, LLMMessage, StreamChunk } from "../types";
 import type { LLMProvider } from "./types";
 import { openaiCompatibleStream } from "./openaiCompatible";
 
@@ -19,17 +19,18 @@ export class GroqProvider implements LLMProvider {
   async *streamChat(
     messages: LLMMessage[],
     options?: ChatOptions,
-  ): AsyncGenerator<string, void, undefined> {
+  ): AsyncGenerator<StreamChunk, void, undefined> {
     if (!this.isConfigured()) throw new Error("Clé Groq manquante.");
     yield* openaiCompatibleStream({
       baseUrl: "https://api.groq.com/openai/v1/chat/completions",
       headers: { "Authorization": `Bearer ${this.apiKey.trim()}` },
       body: {
         model: options?.model ?? this.model,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages: messages.map((m) => ({ role: m.role, content: m.content, tool_call_id: m.tool_call_id, name: m.name, tool_calls: m.tool_calls })),
         stream: true,
         temperature: options?.temperature ?? 0.7,
         max_tokens: options?.maxTokens ?? 1024,
+        ...(options?.tools && options.tools.length > 0 ? { tools: options.tools } : {}),
       },
       signal: options?.signal,
     });

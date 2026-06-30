@@ -1,4 +1,4 @@
-import type { ChatOptions, LLMMessage } from "../types";
+import type { ChatOptions, LLMMessage, StreamChunk } from "../types";
 import type { LLMProvider } from "./types";
 
 /**
@@ -6,6 +6,10 @@ import type { LLMProvider } from "./types";
  * last-resort fallback. Streams the user's input with a brief heads-up
  * in 4-token chunks with a ~30 ms pause between each. The pacing mirrors
  * a small open-source model so the speech orb visually reflects TTS.
+ *
+ * Mock CANNOT call tools — it only ever yields text chunks. Skill
+ * capability is gated by the upstream provider, so demo mode is
+ * effectively chat-only.
  */
 export class MockProvider implements LLMProvider {
   readonly id = "mock";
@@ -17,12 +21,12 @@ export class MockProvider implements LLMProvider {
   async *streamChat(
     messages: LLMMessage[],
     _options?: ChatOptions,
-  ): AsyncGenerator<string, void, undefined> {
+  ): AsyncGenerator<StreamChunk, void, undefined> {
     const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
     const reply = composeMockReply(lastUser.trim());
     const parts = reply.split(/(\s+)/); // keep whitespace as separators
     for (const p of parts) {
-      if (p) yield p;
+      if (p) yield { kind: "text", delta: p };
       if (/\s/.test(p)) continue;
       await sleep(30);
     }

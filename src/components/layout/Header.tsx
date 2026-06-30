@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import type { BackendConfig, ChatMode, VoiceStatus } from "../../ai/types";
 import { fmtDateLong, fmtHMS } from "../../utils/time";
-import { BackendSwitcher } from "../controls/BackendSwitcher";
 import { ThemeToggle } from "../controls/ThemeToggle";
 import type { ThemePref } from "../../hooks/useTheme";
 
@@ -13,6 +12,8 @@ interface Props {
   onBackendKind: (kind: BackendConfig["kind"]) => void;
   themePref: ThemePref;
   onThemeCycle: () => void;
+  /** Anything the caller wants in the right cluster (BackendSwitcher lives here). */
+  slotActions?: ReactNode;
 }
 
 const STATUS_LABEL: Record<VoiceStatus, string> = {
@@ -28,23 +29,15 @@ const STATUS_COLOR: Record<VoiceStatus, string> = {
   speaking: "bg-sky-300",
 };
 
-/** Pinned top strip.
- *  Left cluster  — brand mark + version pill
- *  Center cluster — chat-mode toggle (Voix / Texte)
- *  Right cluster  — live clock · ThemeToggle (◐ auto / ☀ / ☾) ·
- *                    BackendSwitcher · voice-status pill
- *
- *  Selectors keep the layout intact down to small viewports (mode
- *  toggle and clock vanish progressively, not collapse). */
+/** Pinned top strip.  Right cluster = clock · ThemeToggle · slotActions · status. */
 export function Header({
   status,
   mode,
   onModeChange,
-  backendConfig,
-  onBackendKind,
   themePref,
   onThemeCycle,
-}: Props) {
+  slotActions,
+}: Props): ReactElement {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -72,10 +65,7 @@ export function Header({
 
         <ThemeToggle pref={themePref} onCycle={onThemeCycle} />
 
-        <BackendSwitcher
-          config={backendConfig}
-          onKindChange={onBackendKind}
-        />
+        {slotActions}
 
         <div className="hidden md:flex items-center gap-2">
           <span className={`inline-block h-1.5 w-1.5 rounded-full ${STATUS_COLOR[status]} ${status !== "idle" ? "animate-pulse" : ""}`} />
@@ -91,7 +81,7 @@ interface ModeToggleProps {
   onChange: (mode: ChatMode) => void;
 }
 
-function ModeToggle({ mode, onChange }: ModeToggleProps) {
+function ModeToggle({ mode, onChange }: ModeToggleProps): ReactElement {
   return (
     <div className="relative inline-flex p-1 glass-soft rounded-full">
       {(["voice", "text"] as const).map((m) => (

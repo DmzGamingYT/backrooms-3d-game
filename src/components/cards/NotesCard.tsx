@@ -1,14 +1,23 @@
+import type { ReactElement } from "react";
 import { GlassPanel } from "../glass/Glass";
-import { useMemory } from "../../hooks/useMemory";
+
+interface Props {
+  notes: string;
+  setNotes: (s: string) => void;
+  clear: () => void;
+}
 
 /**
- * Free-form scratchpad. Auto-saves on every keystroke (the hook writes
- * to localStorage on `notes` change). `clear` button only appears when
- * there's content so the UI never feels cluttered for an empty note.
+ * Free-form scratchpad. Auto-saves on every keystroke (the parent hook
+ * writes to localStorage on `notes` change). `clear` button only
+ * appears when there's content so the UI never feels cluttered for an
+ * empty note.
+ *
+ * Lifted to props instead of using `useMemory()` directly so the
+ * `manage_notes` skill, when invoked by the assistant, updates the same
+ * React state instance — the textarea reflects the change immediately.
  */
-export function NotesCard() {
-  const { notes, setNotes, clear } = useMemory();
-
+export function NotesCard({ notes, setNotes, clear }: Props): ReactElement {
   return (
     <GlassPanel className="p-5 flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
