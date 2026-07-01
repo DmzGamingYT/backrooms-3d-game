@@ -120,6 +120,14 @@ export function useAssistant({
       };
 
       let accumulated = "";
+      /** Models stuck in a malformed-JSON loop should not consume the
+       *  entire tool-round budget on parse errors alone — after two
+       *  consecutive parse failures we bail out of the tool loop so the
+       *  model can emit a plain-text reply instead of degenerating into
+       *  the "aucune réponse produite" branch with zero user-visible
+       *  content. Reset on every successful parse. */
+      let consecutiveParseErrors = 0;
+      const MAX_CONSECUTIVE_PARSE_ERRORS = 2;
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
           const pendingCalls: ToolCall[] = [];
@@ -161,6 +169,12 @@ export function useAssistant({
 
           if (pendingCalls.length === 0) break;
 
+          // Bail out of the tool loop early if the model is stuck
+          // emitting unparseable JSON. We still push the latest tool
+          // message(s) below so the model has the context for its final
+          // text reply, but the loop won't request another round.
+          if (consecutiveParseErrors > MAX_CONSECUTIVE_PARSE_ERRORS) break;
+
           // Record the assistant message that asked for tools so the
           // model can reference its own utterance on the next turn.
           messages.push({ role: "assistant", content: accumulated, tool_calls: pendingCalls });
@@ -174,21 +188,43 @@ export function useAssistant({
             let args: Record<string, unknown> = {};
             if (!skill) {
               resultText = `Skill inconnue : ${tc.function.name}`;
+              ok = false;
             } else {
-              try { args = JSON.parse(tc.function.arguments || "{}"); }
-              catch { args = {}; }
+              // Parse tool arguments explicitly. Small open models
+              // (Llama 3.1 8b in particular) frequently emit broken
+              // JSON — silently falling back to {} makes the skill
+              // "succeed" with empty args, masking the failure from
+              // the model. Instead we surface the parse error to the
+              // model via a tool message so it can retry with a fixed
+              // payload. The skill itself is NOT executed in that
+              // branch — it would only observe the bad data.
+              let parseError: string | null = null;
               try {
-                const res = await skill.execute(args, ctx);
-                resultText = res.text;
-                ok = res.ok;
+                args = JSON.parse(tc.function.arguments || "{}");
               } catch (err) {
-                resultText = `Erreur : ${(err as Error)?.message ?? String(err)}`;
-                ok = false;
+                args = {};
+                parseError = `Erreur de parsing JSON des arguments pour « ${tc.function.name} » : ${(err as Error)?.message ?? String(err)}. Renvoie un arguments JSON valide qui respecte exactement le schéma de l'outil.`;
               }
-              // Stale-check immediately after the await so an abort during
-              // the skill doesn't leak the chip + tool message into the
-              // transcript/request.
-              if (runIdRef.current !== thisRun) { markInterrupted(); return; }
+
+              if (parseError) {
+                resultText = parseError;
+                ok = false;
+                consecutiveParseErrors++;
+              } else {
+                consecutiveParseErrors = 0;
+                try {
+                  const res = await skill.execute(args, ctx);
+                  resultText = res.text;
+                  ok = res.ok;
+                } catch (err) {
+                  resultText = `Erreur : ${(err as Error)?.message ?? String(err)}`;
+                  ok = false;
+                }
+                // Stale-check immediately after the await so an abort during
+                // the skill doesn't leak the chip + tool message into the
+                // transcript/request.
+                if (runIdRef.current !== thisRun) { markInterrupted(); return; }
+              }
             }
 
             // Surface a chip row in the transcript (collapsible in UI).

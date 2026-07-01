@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { GlassPanel } from "../glass/Glass";
 import { fmtDateLong, fmtHMS } from "../../utils/time";
+import { useNow } from "../../hooks/useNow";
 
 interface Props {
   tasksRemaining: number;
@@ -9,14 +9,11 @@ interface Props {
 /**
  * Hero card of the aside — live wall clock, weekday + date, and a small
  * tasks-remaining counter so the user always sees "what's still on my
- * plate" without scrolling. Updates once per second like the Header.
+ * plate" without scrolling. Shares the 1 Hz tick with Header via
+ * useNow so the two clocks stay in lockstep.
  */
 export function BriefingCard({ tasksRemaining }: Props) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow();
 
   const h = now.getHours();
   const greeting =

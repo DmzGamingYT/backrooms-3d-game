@@ -36,7 +36,9 @@ jobs:
       - name: 🟢 Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22 LTS — cohérent avec ci.yml, lighthouse.yml et
+          # @types/node@22.x en devDependencies.
+          node-version: '22'
           cache: npm
 
       - name: 💾 Cache Playwright browsers

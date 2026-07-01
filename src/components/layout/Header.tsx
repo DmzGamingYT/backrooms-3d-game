@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactElement, type ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import type { BackendConfig, ChatMode, VoiceStatus } from "../../ai/types";
 import { fmtDateLong, fmtHMS } from "../../utils/time";
+import { useNow } from "../../hooks/useNow";
 import { ThemeToggle } from "../controls/ThemeToggle";
 import type { ThemePref } from "../../hooks/useTheme";
 
@@ -38,11 +39,10 @@ export function Header({
   onThemeCycle,
   slotActions,
 }: Props): ReactElement {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  // Clock is shared with BriefingCard via useNow — single ticker, zero
+  // second setInterval lifecycle, no per-second drift between the two
+  // displays.
+  const now = useNow();
 
   return (
     <header className="relative z-20 grid grid-cols-[1fr_auto_1fr] items-center px-6 sm:px-10 py-5 select-none gap-4">

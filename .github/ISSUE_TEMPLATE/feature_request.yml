@@ -1,5 +1,5 @@
 name: "✨ Feature Request"
-description: "Suggest a new feature, polish pass, or quality-of-life improvement."
+description: "Suggérer une nouvelle fonctionnalité, une amélioration ou un outil pour Solis."
 title: "[feat] "
 labels:
   - "enhancement"
@@ -8,37 +8,37 @@ body:
   - type: markdown
     attributes:
       value: |
-        Describe the feature you'd like to see. A motivating scenario
-        is even better — what were you trying to do and how would the
-        feature help?
+        Décrivez la fonctionnalité que vous aimeriez voir. Un scénario
+        motivant est encore mieux — qu'essayiez-vous de faire et comment
+        la fonctionnalité vous aiderait-elle ?
 
   - type: textarea
     id: problem
     attributes:
-      label: "Problem it solves"
-      placeholder: "When I run out of batteries late-game I get lost and don't know which way the exit is…"
+      label: "Problème à résoudre"
+      placeholder: "Quand je demande à Solis de me rappeler quelque chose, il n'a pas de notion de rappel programmé…"
     validations:
       required: true
 
   - type: textarea
     id: proposal
     attributes:
-      label: "Proposed solution"
-      placeholder: "How should it work? UI, controls, audio cue, achievement…"
+      label: "Solution proposée"
+      placeholder: "Comment ça devrait fonctionner ? Nouvel outil, commande vocale, UI, intégration…"
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: "Alternatives considered"
+      label: "Alternatives envisagées"
     validations:
       required: false
 
-  - type: checkbox
+  - type: checkboxes
     id: willing
     attributes:
-      label: "Willingness"
-      description: "Optional — keep both checked states allowed so it's a soft signal."
+      label: "Disponibilité"
+      description: "Optionnel — signal d'intérêt pour une contribution."
       options:
-        - label: "I'd be willing to submit a PR for this if we agree on the design"
+        - label: "Je serais prêt(e) à soumettre une PR si on se met d'accord sur le design"

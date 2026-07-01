@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { memo, useState, type ReactElement } from "react";
 import type { ToolChipEntry } from "../../ai/types";
 
 interface Props {
@@ -11,8 +11,15 @@ interface Props {
  *
  * Color-coded: emerald-ish dot for ok=true, rose for ok=false — gives
  * a glanceable signal in scroll-history without expanding every chip.
+ *
+ * Wrapped in `React.memo`: each chip's parent component (TranscriptPanel)
+ * re-renders on every streamed token, but a freshly emitted tool message
+ * is the only row whose `chip` prop reference changes — memo ensures
+ * only the new chip commits. Internal `open` toggle state survives the
+ * memo because React preserves local state across commits keyed by
+ * component identity.
  */
-export function ToolChip({ chip }: Props): ReactElement {
+function ToolChipImpl({ chip }: Props): ReactElement {
   const [open, setOpen] = useState(false);
 
   const argsLine = formatArgs(chip.args);
@@ -68,6 +75,8 @@ export function ToolChip({ chip }: Props): ReactElement {
     </div>
   );
 }
+
+export const ToolChip = memo(ToolChipImpl);
 
 function formatArgs(args: Record<string, unknown>): string {
   const keys = Object.keys(args);

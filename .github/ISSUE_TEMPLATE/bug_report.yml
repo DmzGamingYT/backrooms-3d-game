@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: "Something isn't working as expected on a local build."
+description: "Something isn't working as expected in Solis."
 title: "[bug] "
 labels:
   - "bug"
@@ -8,51 +8,64 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug! The more detail you can give, the faster
-        we can reproduce and fix. Screenshots / clips are very welcome.
+        Merci de signaler un bug ! Plus vous donnez de détails, plus on
+        peut reproduire et corriger vite. Captures d'écran / clips bienvenus.
 
   - type: dropdown
-    id: difficulty
+    id: backend
     attributes:
-      label: "Difficulty played at"
+      label: "Backend utilisé"
+      description: "Quel fournisseur LLM était actif au moment du bug ?"
       options:
-        - "Casual"
-        - "Standard"
-        - "Hardcore"
-        - "Not applicable (game didn't start)"
-      validations:
-        required: true
+        - "Démo (mock)"
+        - "Groq"
+        - "OpenRouter"
+        - "Ollama (local)"
+        - "Non applicable / autre"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: "Mode de saisie"
+      options:
+        - "Voix (micro + Web Speech)"
+        - "Texte (chat clavier)"
+        - "Les deux"
+    validations:
+      required: true
 
   - type: textarea
     id: summary
     attributes:
-      label: "What happened?"
-      placeholder: "One or two sentences is fine."
+      label: "Que s'est-il passé ?"
+      placeholder: "Une ou deux phrases suffisent."
     validations:
       required: true
 
   - type: textarea
     id: reproduce
     attributes:
-      label: "Steps to reproduce"
+      label: "Étapes pour reproduire"
       placeholder: |
-        1. Start the local dev server…
-        2. Click JOUER…
-        3. Pick up the first battery…
+        1. Lancer npm run dev…
+        2. Sélectionner le backend Groq…
+        3. Toucher l'orb pour parler…
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: "What did you expect?"
+      label: "Comportement attendu"
     validations:
       required: false
 
   - type: input
     id: browser
     attributes:
-      label: "Browser + version"
+      label: "Navigateur + version"
       placeholder: "Chrome 138, Firefox 130, Safari 18…"
     validations:
       required: true
@@ -60,6 +73,6 @@ body:
   - type: textarea
     id: console
     attributes:
-      label: "Console output (optional)"
+      label: "Sortie console (optionnel)"
       placeholder: |
-        Paste any errors from DevTools > Console here.
+        Collez ici les erreurs de DevTools > Console.

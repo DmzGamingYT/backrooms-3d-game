@@ -24,3 +24,24 @@ updates:
       - "automated"
     commit-message:
       prefix: "deps"
+
+  # Garder les versions d'actions GitHub à jour (checkout, setup-node,
+  # cache, git-auto-commit…). Regroupées en un seul PR mensuel pour
+  # limiter le bruit — une bump de checkout@v4 → v5 ne mérite pas sa
+  # propre revue.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "08:00"
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "automated"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"

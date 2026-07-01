@@ -1,27 +1,26 @@
 ## Description
-<!-- What does this PR do? Why? -->
+<!-- Que fait cette PR ? Pourquoi ? -->
 
-## Type of change
-- [ ] 🐛 Bug fix (non-breaking fix for an issue)
-- [ ] ✨ New feature (non-breaking addition)
-- [ ] 💥 Breaking change (would change public API or gameplay behaviour)
-- [ ] 📝 Documentation / cleanup
-- [ ] ⚡ Performance / refactor (no behavioural change)
+## Type de changement
+- [ ] 🐛 Correctif (non-cassant)
+- [ ] ✨ Nouvelle fonctionnalité (non-cassante)
+- [ ] 💥 Breaking change (changement d'API publique ou de comportement utilisateur)
+- [ ] 📝 Documentation / nettoyage
+- [ ] ⚡ Performance / refactor (sans changement de comportement)
 
-## How to test
+## Comment tester
 1.
 2.
 3.
 
 ## Checklist
-- [ ] `npm run build` passes locally
-- [ ] `npm run test:e2e` passes locally (run `npm run test:e2e:install` once first)
-- [ ] `npx tsc --noEmit` reports no new errors
-- [ ] I updated README / docs / public assets where applicable
-- [ ] I considered Lighthouse a11y (colour contrast, focus rings, pointer-lock fallback)
+- [ ] `npx tsc --noEmit` ne signale aucune nouvelle erreur
+- [ ] `npm run build` passe en local
+- [ ] J'ai mis à jour le README / la doc / les assets si applicable
+- [ ] J'ai vérifié l'accessibilité Lighthouse (contraste, focus, navigation clavier)
 
-## Screenshots / clips
-<!-- Required if the change affects visuals. Drop a before/after or a short clip. -->
+## Captures / clips
+<!-- Requis si la modification affecte l'UI. Avant/après ou court clip. -->
 
-## Related issues
-<!-- Closes #123, fixes #456 — auto-closes on merge. -->
+## Issues liées
+<!-- Closes #123, fixes #456 — se ferme automatiquement au merge. -->
