@@ -19,8 +19,12 @@ function computeAuto(): EffectiveTheme {
 
 function readPref(): ThemePref {
   if (typeof window === "undefined") return "auto";
-  const v = window.localStorage.getItem(KEY);
-  return v === "day" || v === "night" || v === "auto" ? v : "auto";
+  try {
+    const v = window.localStorage.getItem(KEY);
+    return v === "day" || v === "night" || v === "auto" ? v : "auto";
+  } catch {
+    return "auto";
+  }
 }
 
 /**
@@ -50,7 +54,7 @@ export function useTheme() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(KEY, pref);
+    try { window.localStorage.setItem(KEY, pref); } catch { /* private mode */ }
 
     let timeoutId: number | undefined;
     let intervalId: number | undefined;

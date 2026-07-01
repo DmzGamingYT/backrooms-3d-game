@@ -24,6 +24,16 @@ export function ChatInput({ onSend, busy }: Props) {
     ref.current?.focus();
   }, []);
 
+  // Auto-grow the textarea to fit content, capped at max-h-32 (128px).
+  // JSDoc promised this but the logic was missing — now it actually
+  // resizes on every keystroke.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [draft]);
+
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     const trimmed = draft.trim();

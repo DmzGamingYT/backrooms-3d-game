@@ -65,11 +65,15 @@ export function useVoice() {
   const [interim, setInterim] = useState("");
   const [level, setLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<ChatMode>(() =>
-    typeof window !== "undefined" && window.localStorage.getItem(MODE_KEY) === "text"
-      ? "text"
-      : "voice",
-  );
+  const [mode, setMode] = useState<ChatMode>(() => {
+    try {
+      return typeof window !== "undefined" && window.localStorage.getItem(MODE_KEY) === "text"
+        ? "text"
+        : "voice";
+    } catch {
+      return "voice";
+    }
+  });
 
   // Mutable mirror of transcript — share with useAssistant without
   // re-creating it on every entry.
@@ -80,7 +84,8 @@ export function useVoice() {
   }, [transcript]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") window.localStorage.setItem(MODE_KEY, mode);
+    try { if (typeof window !== "undefined") window.localStorage.setItem(MODE_KEY, mode); }
+    catch { /* private mode */ }
   }, [mode]);
 
   // Live SkillContext builder — memoised on every changing input so
@@ -221,6 +226,9 @@ export function useVoice() {
       return;
     } else if (status === "speaking") {
       stopSpeaking();
+      assistant.abort();
+      setStatus("idle");
+    } else if (status === "processing") {
       assistant.abort();
       setStatus("idle");
     }

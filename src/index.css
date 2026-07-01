@@ -183,3 +183,28 @@ button { transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background 2
 /* Subtle scrollbar thumb swap for the day palette */
 [data-theme="day"] .thin-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.10); }
 [data-theme="day"] .thin-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.18); }
+
+/* ══════════════════════════════════════════════════════════════════
+   Reduced motion — honour the OS preference. Disables every
+   decorative animation (aurora drift, orb pulse, mic dot, transcript
+   fade, speak ring) and collapses transitions to near-instant so
+   users with vestibular sensitivity get a static, calm UI.
+   ══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob,
+  .orb-idle-anim,
+  .orb-listen-anim,
+  .orb-speak-anim,
+  .mic-dot-active,
+  .transcript-in,
+  .speak-pulse {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

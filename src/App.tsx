@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useVoice } from "./hooks/useVoice";
 import { Aurora } from "./components/aurora/Aurora";
 import { GlassPanel } from "./components/glass/Glass";
@@ -44,6 +44,52 @@ export default function App(): ReactElement {
   })();
 
   const isBusy = voice.status === "processing" || voice.status === "speaking";
+  const [asideOpen, setAsideOpen] = useState(false);
+
+  // Ref to the latest toggleVoice so the keyboard listener doesn't
+  // re-subscribe on every render (toggleVoice is a fresh useCallback
+  // each time because useAssistant returns a new object reference).
+  const toggleVoiceRef = useRef(voice.toggleVoice);
+  toggleVoiceRef.current = voice.toggleVoice;
+
+  // Keyboard shortcuts (voice-first UX):
+  //   Space  → toggle voice (only in voice mode, not while typing)
+  //   Escape → stop listening / TTS / processing · close mobile aside
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.code === "Space" && voice.mode === "voice") {
+        e.preventDefault();
+        toggleVoiceRef.current();
+      } else if (e.key === "Escape") {
+        if (voice.status !== "idle") toggleVoiceRef.current();
+        setAsideOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [voice.mode, voice.status]);
+
+  const asideContent = (
+    <>
+      <BriefingCard tasksRemaining={tasksRemaining} />
+      <TasksPanel
+        tasks={voice.tasks.tasks}
+        onAdd={voice.tasks.add}
+        onToggle={voice.tasks.toggle}
+        onRemove={voice.tasks.remove}
+        onEdit={voice.tasks.edit}
+        onClearDone={voice.tasks.clearDone}
+      />
+      <NotesCard
+        notes={voice.memory.notes}
+        setNotes={voice.memory.setNotes}
+        clear={voice.memory.clearNotes}
+      />
+      <WeatherCard />
+    </>
+  );
 
   return (
     <div className="relative min-h-screen w-screen overflow-hidden">
@@ -100,25 +146,47 @@ export default function App(): ReactElement {
             )}
           </section>
 
-          {/* ───── Action aside ────────────────────────────── */}
+          {/* ───── Action aside — desktop (static right column) ── */}
           <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-1 thin-scroll pb-2">
-            <BriefingCard tasksRemaining={tasksRemaining} />
-            <TasksPanel
-              tasks={voice.tasks.tasks}
-              onAdd={voice.tasks.add}
-              onToggle={voice.tasks.toggle}
-              onRemove={voice.tasks.remove}
-              onEdit={voice.tasks.edit}
-              onClearDone={voice.tasks.clearDone}
-            />
-            <NotesCard
-              notes={voice.memory.notes}
-              setNotes={voice.memory.setNotes}
-              clear={voice.memory.clearNotes}
-            />
-            <WeatherCard />
+            {asideContent}
           </aside>
         </main>
+
+        {/* ───── Action aside — mobile (slide-in drawer) ─────── */}
+        {asideOpen && (
+          <div className="lg:hidden fixed inset-0 z-40 flex justify-end">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setAsideOpen(false)}
+              aria-hidden
+            />
+            <aside role="dialog" aria-modal="true" aria-label="Panneau d'informations" className="relative w-80 max-w-[85vw] h-full glass-heavy overflow-y-auto p-4 thin-scroll flex flex-col gap-3">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setAsideOpen(false)}
+                  aria-label="Fermer le panneau"
+                  className="text-zinc-400 hover:text-zinc-200 text-sm transition"
+                >
+                  ✕
+                </button>
+              </div>
+              {asideContent}
+            </aside>
+          </div>
+        )}
+
+        {/* ───── Floating aside toggle — mobile/tablet only ─── */}
+        {!asideOpen && (
+          <button
+            type="button"
+            onClick={() => setAsideOpen(true)}
+            aria-label="Ouvrir le panneau"
+            className="lg:hidden fixed bottom-6 right-6 z-30 glass-heavy rounded-full px-4 py-3 text-[10px] uppercase tracking-[0.3em] text-zinc-200 hover:scale-105 active:scale-95 transition shadow-lg"
+          >
+            Panneau
+          </button>
+        )}
       </div>
     </div>
   );
