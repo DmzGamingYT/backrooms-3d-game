@@ -29,12 +29,12 @@ jobs:
       PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: 🟢 Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           # Node 22 LTS — cohérent avec ci.yml, lighthouse.yml et
           # @types/node@22.x en devDependencies.
@@ -42,7 +42,7 @@ jobs:
           cache: npm
 
       - name: 💾 Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
@@ -83,7 +83,7 @@ jobs:
 
       - name: 📤 Commit assets back
         if: success()
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: |
             chore(assets): regenerate visual assets
